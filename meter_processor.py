@@ -55,10 +55,20 @@ class MeterProcessor:
             self.wb.save(self.excel_file)
     
     def preprocess_image(self, image_path):
-        """Попередня обробка зображення для кращого розпізнавання"""
+        """Попередня обробка зображення для кращого розпізнавання з оптимізацією пам'яті"""
         img = cv2.imread(image_path)
         if img is None:
             raise ValueError(f"Не вдалося завантажити зображення: {image_path}")
+        
+        # ОПТИМІЗАЦІЯ: Зменшуємо розмір якщо фото занадто велике
+        height, width = img.shape[:2]
+        max_dimension = 1920  # Максимальний розмір
+        
+        if max(height, width) > max_dimension:
+            scale = max_dimension / max(height, width)
+            new_width = int(width * scale)
+            new_height = int(height * scale)
+            img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
         
         # Конвертація в градації сірого
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -67,11 +77,20 @@ class MeterProcessor:
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         enhanced = clahe.apply(gray)
         
+        # ОПТИМІЗАЦІЯ: Видаляємо gray з пам'яті
+        del gray
+        
         # Бінаризація
         _, binary = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         
+        # ОПТИМІЗАЦІЯ: Видаляємо enhanced з пам'яті
+        del enhanced
+        
         # Зменшення шуму
         denoised = cv2.fastNlMeansDenoising(binary, None, 10, 7, 21)
+        
+        # ОПТИМІЗАЦІЯ: Видаляємо binary з пам'яті
+        del binary
         
         return img, denoised
     
