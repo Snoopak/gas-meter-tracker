@@ -29,4 +29,4 @@ ENV FLASK_APP=web_app.py
 EXPOSE 10000
 
 # Команда запуску (Render передає PORT через змінну середовища)
-CMD gunicorn web_app:app --bind 0.0.0.0:$PORT
+CMD gunicorn web_app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1
