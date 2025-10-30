@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Обробка фото лічильників</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+            margin-bottom: 20px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Мобільні стилі */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                padding: 15px;
+                border-radius: 15px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 8px;
+            }
+            
+            .subtitle {
+                font-size: 0.85em;
+                margin-bottom: 15px;
+            }
+            
+            .upload-area {
+                padding: 30px 15px;
+                min-height: 120px;
+            }
+            
+            .upload-icon {
+                font-size: 3em !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .upload-area h3 {
+                font-size: 1em;
+            }
+            
+            .upload-area p {
+                font-size: 0.85em;
+            }
+            
+            .btn {
+                padding: 12px 25px !important;
+                font-size: 1em !important;
+                margin: 8px 5px !important;
+                width: calc(50% - 10px);
+                display: inline-block;
+            }
+            
+            .data-field label {
+                font-size: 0.95em;
+            }
+            
+            .data-field input {
+                padding: 10px;
+                font-size: 16px; /* Запобігає зуму на iOS */
+            }
+            
+            .preview-image {
+                max-height: 200px !important;
+            }
+            
+            .result-area {
+                padding: 15px !important;
+            }
+            
+            .result-area h2 {
+                font-size: 1.3em;
+                margin-bottom: 15px !important;
+            }
+            
+            .button-group {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .message {
+                font-size: 0.9em;
+            }
+        }
+        
+        /* Для дуже маленьких екранів */
+        @media (max-width: 360px) {
+            h1 {
+                font-size: 1.3em;
+            }
+            
+            .btn {
+                width: 100%;
+                margin: 5px 0 !important;
+            }
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+        }
+        
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result-area {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9ff;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .data-field {
+            margin: 15px 0;
+        }
+        
+        .data-field label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .data-field input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .data-field input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loader {
+            display: none;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📷 Обробка лічильників</h1>
+        <p class="subtitle">Завантажте фото лічильника для автоматичного розпізнавання даних</p>
+        
+        <div class="upload-area" id="upload-area">
+            <div class="upload-icon">📤</div>
+            <h3>Перетягніть фото сюди або натисніть для вибору</h3>
+            <p style="color: #666; margin-top: 10px;">Підтримуються: JPG, PNG, GIF, BMP</p>
+            <div style="margin-top: 15px;">
+                <button class="btn" onclick="openCamera(event)" style="background: #28a745; width: auto; margin: 5px;">📷 Зробити фото</button>
+                <button class="btn" onclick="openGallery(event)" style="background: #17a2b8; width: auto; margin: 5px;">🖼️ З галереї</button>
+            </div>
+        </div>
+        
+        <input type="file" id="file-input" accept="image/*" capture="environment">
+        
+        <div class="loader" id="loader"></div>
+        
+        <div id="message"></div>
+        
+        <div class="result-area" id="result-area">
+            <h2 style="margin-bottom: 20px; color: #333;">📊 Розпізнані дані</h2>
+            
+            <img id="preview" class="preview-image" style="display: none;">
+            
+            <div class="data-field">
+                <label>Марка:</label>
+                <input type="text" id="brand" placeholder="Марка лічильника">
+            </div>
+            
+            <div class="data-field">
+                <label>Серійний номер:</label>
+                <input type="text" id="serial_number" placeholder="Серійний номер">
+            </div>
+            
+            <div class="data-field">
+                <label>Рік випуску:</label>
+                <input type="text" id="year" placeholder="Рік випуску">
+            </div>
+            
+            <div class="data-field">
+                <label>Показання:</label>
+                <input type="text" id="reading" placeholder="Показання лічильника">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn" onclick="saveData()">💾 Зберегти в Excel</button>
+                <button class="btn" onclick="newPhoto()">➕ Нове фото</button>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn" onclick="downloadExcel()">📥 Завантажити Excel</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentFile = null;
+        let currentFilename = null;
+        
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const loader = document.getElementById('loader');
+        const resultArea = document.getElementById('result-area');
+        const messageDiv = document.getElementById('message');
+        const preview = document.getElementById('preview');
+        
+        // Функція для відкриття камери
+        function openCamera(e) {
+            e.stopPropagation();
+            fileInput.setAttribute('capture', 'environment');
+            fileInput.click();
+        }
+        
+        // Функція для відкриття галереї
+        function openGallery(e) {
+            e.stopPropagation();
+            fileInput.removeAttribute('capture');
+            fileInput.click();
+        }
+        
+        // Клік на область завантаження (тепер не відкриває вибір файлу автоматично)
+        uploadArea.addEventListener('click', (e) => {
+            // Дозволяємо лише якщо клікнули на саму область, а не на кнопки
+            if (e.target === uploadArea || e.target.className === 'upload-icon' || 
+                e.target.tagName === 'H3' || e.target.tagName === 'P') {
+                openGallery(e);
+            }
+        });
+        
+        // Вибір файлу
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        // Drag & Drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showMessage('Будь ласка, виберіть файл зображення', 'error');
+                return;
+            }
+            
+            currentFile = file;
+            currentFilename = file.name;
+            
+            // Показуємо превью
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            
+            uploadFile(file);
+        }
+        
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            loader.style.display = 'block';
+            messageDiv.innerHTML = '';
+            resultArea.style.display = 'none';
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loader.style.display = 'none';
+                
+                if (data.success) {
+                    showMessage('Фото успішно оброблено!', 'success');
+                    displayResults(data.data);
+                } else {
+                    showMessage('Помилка: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                showMessage('Помилка при завантаженні: ' + error, 'error');
+            });
+        }
+        
+        function displayResults(data) {
+            document.getElementById('brand').value = data.brand || '';
+            document.getElementById('serial_number').value = data.serial_number || '';
+            document.getElementById('year').value = data.year || '';
+            document.getElementById('reading').value = data.reading || '';
+            
+            resultArea.style.display = 'block';
+        }
+        
+        function saveData() {
+            const data = {
+                filename: currentFilename,
+                brand: document.getElementById('brand').value,
+                serial_number: document.getElementById('serial_number').value,
+                year: document.getElementById('year').value,
+                reading: document.getElementById('reading').value
+            };
+            
+            loader.style.display = 'block';
+            
+            fetch('/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                loader.style.display = 'none';
+                
+                if (result.success) {
+                    showMessage('✅ Дані збережено в Excel!', 'success');
+                    setTimeout(() => newPhoto(), 2000);
+                } else {
+                    showMessage('Помилка: ' + result.error, 'error');
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                showMessage('Помилка збереження: ' + error, 'error');
+            });
+        }
+        
+        function newPhoto() {
+            resultArea.style.display = 'none';
+            messageDiv.innerHTML = '';
+            preview.style.display = 'none';
+            fileInput.value = '';
+            currentFile = null;
+            currentFilename = null;
+        }
+        
+        function downloadExcel() {
+            window.location.href = '/download';
+        }
+        
+        function showMessage(text, type) {
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+        }
+    </script>
+</body>
+</html>

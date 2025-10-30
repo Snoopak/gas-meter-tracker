@@ -1,0 +1,9 @@
+opencv-python==4.8.1.78
+pytesseract==0.3.10
+openpyxl==3.1.2
+Pillow==10.1.0
+Flask==3.0.0
+Werkzeug==3.0.1
+numpy==1.26.2
+qrcode[pil]==7.4.2
+gunicorn==21.2.0
